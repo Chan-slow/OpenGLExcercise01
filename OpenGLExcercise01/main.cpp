@@ -74,6 +74,7 @@ int main()
     //glEnable(GL_CULL_FACE);//开启面剔除模式
     //glCullFace(GL_BACK);//剔除背面
     glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//选择绘制模式。这里使用线框
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);//恢复默认绘制模式
 
     unsigned int VAO;//创建VAO
     glGenVertexArrays(1, &VAO);//注册VAO的id，申请缓冲区，我们本可以使用数组形式创建多个VAO，此处暂时不需要，就创建了一个。
