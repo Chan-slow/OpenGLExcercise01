@@ -4,10 +4,18 @@
 #include <GLFW/glfw3.h>
 
 float vertices[] = {
-    -0.5f, -0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-     0.0f,  0.5f, 0.0f
+    -0.5f, -0.5f, 0.0f,//1
+     0.5f, -0.5f, 0.0f,//2
+     0.0f,  0.5f, 0.0f,//3
+   //0.5f, -0.5f, 0.0f,
+   //0.0f,  0.5f, 0.0f,
+     0.8f,  0.8f, 0.0f //4
     };                                                    
+
+unsigned int indices[] = {
+    0,1,2,
+    2,1,3
+};
 
 const char* vertexShaderSource =
 "#version 330 core                                         \n   "
@@ -63,7 +71,9 @@ int main()
         return -1;
     }
     glViewport(0, 0, 800, 600);//设定窗口初始坐标和大小
-
+    //glEnable(GL_CULL_FACE);//开启面剔除模式
+    //glCullFace(GL_BACK);//剔除背面
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);//选择绘制模式。这里使用线框
 
     unsigned int VAO;//创建VAO
     glGenVertexArrays(1, &VAO);//注册VAO的id，申请缓冲区，我们本可以使用数组形式创建多个VAO，此处暂时不需要，就创建了一个。
@@ -73,6 +83,11 @@ int main()
     glGenBuffers(1, &VBO);//注册VBO的id，申请缓冲区
     glBindBuffer(GL_ARRAY_BUFFER, VBO);//使用glBindBuffer函数把新创建的缓冲绑定到GL_ARRAY_BUFFER目标上
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);//设定将具体哪个数据传送到缓冲区内
+
+    unsigned int EBO;
+    glGenBuffers(1, &EBO);//注册EBO缓冲区
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);//绑定缓冲区
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     unsigned int vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);//创建顶点着色器
@@ -101,13 +116,13 @@ int main()
 
     这里只有顶点位置，也只能讨论顶点位置，所以为0
 
-    size：一个顶点所有数据的个数，这里每个顶点又两个浮点数属性值，所以是2
+    size：一个顶点所有数据的个数，这里每个顶点又3个浮点数属性值，所以是3
 
     type：顶点描述数据的类型，这里position数组中的数据全部为float，所以是GL_FLOAT
 
     normalized：是否需要显卡帮忙把数据归一化到-1到+1区间，这里不需要，所以设置GL_FALSE
 
-    stride：一个顶点占有的总的字节数，这里为两个float，所以是sizeof(float)*2
+    stride：一个顶点占有的总的字节数，这里为3个float，所以是sizeof(float)*3
 
     pointer：当前指针指向的vertex内部的偏离字节数，可以唯一的标识顶点某个属性的偏移量
 
@@ -120,12 +135,15 @@ int main()
     {
         processInput(window);
 
-        glClearColor(0.5f, 0.3f, 0.4f, 1.0f);//设置清屏颜色
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);//设置清屏颜色
         glClear(GL_COLOR_BUFFER_BIT);//指定清空哪个buffer，这里选择的是颜色缓冲区。
 
         glBindVertexArray(VAO);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+
         glUseProgram(shaderProgram);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //glDrawArrays(GL_TRIANGLES, 0, 6);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);//使用索引缓冲区的索引值进行绘制。
 
         glfwSwapBuffers(window);       //交换前后缓冲器
         glfwPollEvents();       //检查有没有触发什么事件（比如键盘输入、鼠标移动等）
