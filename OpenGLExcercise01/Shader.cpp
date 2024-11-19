@@ -4,6 +4,11 @@
 #include <sstream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+
 
 Shader::Shader(const char* vertexPath, const char* fragmentPath)
 {
@@ -45,22 +50,12 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		vertex = glCreateShader(GL_VERTEX_SHADER);//创建顶点着色器,返回的是一个创建完的着色器的id。
 		glShaderSource(vertex, 1, &vertexSource, nullptr);//glShaderSource函数把要编译的着色器对象作为第一个参数。第二参数指定了传递的源码字符串数量，这里只有一个。第三个参数是顶点着色器真正的源码，第四个参数我们先设置为NULL。
 		glCompileShader(vertex);//编译shader
-		glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-		};
+		Shader::checkCompileErrors(vertex, "VERTEX");
 
 		fragment = glCreateShader(GL_FRAGMENT_SHADER);//创建片元着色器
 		glShaderSource(fragment, 1, &fragmentSource, nullptr);//glShaderSource函数把要编译的着色器对象作为第一个参数。第二参数指定了传递的源码字符串数量，这里只有一个。第三个参数是顶点着色器真正的源码，第四个参数我们先设置为NULL。
 		glCompileShader(fragment);//编译shader
-		glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-		if (!success)
-		{
-			glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-		};
+		Shader::checkCompileErrors(fragment, "FRAGMENT");
 
 		//组装顶点着色器和片元着色器
 		ID = glCreateProgram();
@@ -68,6 +63,7 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
 		glAttachShader(ID, vertex);
 		glAttachShader(ID, fragment);
 		glLinkProgram(ID);
+		Shader::checkCompileErrors(ID, "PROGRAM");
 
 		glDeleteShader(vertex);
 		glDeleteShader(fragment);
@@ -83,3 +79,56 @@ void Shader::use()
 {
 	glUseProgram(ID);
 }
+
+void Shader::setBool(const std::string& name, bool value) const
+{
+	glUniform1i(glGetUniformLocation(ID, name.c_str()), (int)value);
+}
+void Shader::setInt(const std::string& name, int value) const
+{
+	glUniform1i(glGetUniformLocation(ID, name.c_str()), value);
+}
+void Shader::setFloat(const std::string& name, float value) const
+{
+	glUniform1f(glGetUniformLocation(ID, name.c_str()), value);
+}
+void Shader::setMatrix4f(const std::string& name, const glm::mat4& value) const
+{
+	glUniformMatrix4fv(glGetUniformLocation(ID, name.c_str()),1, GL_FALSE,glm::value_ptr(value));
+}
+
+void Shader::checkCompileErrors(unsigned int ID, std::string type)
+{
+	int success;
+	char infoLog[512];
+
+	if (type == "VERTEX")
+	{
+		glGetShaderiv(ID, GL_COMPILE_STATUS, &success);
+		if (!success)
+		{
+			glGetShaderInfoLog(ID, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+		}
+	}
+
+	if (type == "FRAGMENT")
+	{
+		glGetShaderiv(ID, GL_COMPILE_STATUS, &success);
+		if (!success)
+		{
+			glGetShaderInfoLog(ID, 512, NULL, infoLog);
+			std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+		}
+	}
+
+	if (type == "PROGRAM")
+	{
+		glGetProgramiv(ID, GL_LINK_STATUS, &success);
+		if (!success)
+		{
+			glGetProgramInfoLog(ID, 512, NULL, infoLog);
+			std::cout << "ERROR::PROGRAM::LINK::COMPILATION_FAILED\n" << infoLog << std::endl;
+		}
+	}
+};
